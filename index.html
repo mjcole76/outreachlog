@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OutreachLog - Track Your Cold Outreach, See What Converts</title>
+    <meta name="description" content="Simple cold outreach tracker for solopreneurs. Track emails, LinkedIn DMs, Twitter outreach. See response rates, find what works, stop guessing.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-blue-900">OutreachLog</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="exportBtn" class="text-sm text-gray-600 hover:text-gray-900">Export CSV</button>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">Upgrade to Pro</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Dashboard Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div class="text-sm text-gray-600 mb-1">Total Contacts</div>
+                <div id="totalContacts" class="text-3xl font-bold text-gray-900">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div class="text-sm text-gray-600 mb-1">Outreach Sent</div>
+                <div id="totalSent" class="text-3xl font-bold text-gray-900">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div class="text-sm text-gray-600 mb-1">Response Rate</div>
+                <div id="responseRate" class="text-3xl font-bold text-green-600">0%</div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div class="text-sm text-gray-600 mb-1">Conversions</div>
+                <div id="conversions" class="text-3xl font-bold text-blue-600">0</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mb-6 border-b border-gray-200">
+            <div class="flex gap-8">
+                <button class="tab-btn active pb-3 border-b-2 border-blue-600 text-blue-600 font-medium" data-tab="contacts">Contacts</button>
+                <button class="tab-btn pb-3 border-b-2 border-transparent text-gray-600 font-medium hover:text-gray-900" data-tab="templates">Templates</button>
+                <button class="tab-btn pb-3 border-b-2 border-transparent text-gray-600 font-medium hover:text-gray-900" data-tab="analytics">Analytics</button>
+            </div>
+        </div>
+
+        <!-- Contacts Tab -->
+        <div id="contactsTab" class="tab-content">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                <h2 class="text-lg font-semibold mb-4">Add Contact</h2>
+                <form id="addContactForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="text" id="contactName" placeholder="Name" required class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="email" id="contactEmail" placeholder="Email" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="text" id="contactCompany" placeholder="Company" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <select id="contactSource" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Source</option>
+                        <option value="LinkedIn">LinkedIn</option>
+                        <option value="Twitter">Twitter</option>
+                        <option value="Reddit">Reddit</option>
+                        <option value="Referral">Referral</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <input type="text" id="contactLinkedIn" placeholder="LinkedIn URL" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700">Add Contact</button>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold">Contacts</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Company</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Last Contact</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contactsTable" class="divide-y divide-gray-200">
+                            <!-- Contacts will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Templates Tab -->
+        <div id="templatesTab" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                <h2 class="text-lg font-semibold mb-4">Add Template</h2>
+                <form id="addTemplateForm">
+                    <input type="text" id="templateName" placeholder="Template Name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <select id="templateChannel" class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="Email">Email</option>
+                        <option value="LinkedIn">LinkedIn</option>
+                        <option value="Twitter">Twitter DM</option>
+                    </select>
+                    <textarea id="templateContent" placeholder="Message template... Use {firstName}, {company} for personalization" rows="6" required class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700">Save Template</button>
+                </form>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="templatesGrid">
+                <!-- Templates will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analyticsTab" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold mb-4">Response Rate Over Time</h3>
+                    <canvas id="responseChart"></canvas>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold mb-4">Outreach by Channel</h3>
+                    <canvas id="channelChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 class="text-lg font-semibold mb-4">Template Performance</h3>
+                <div id="templatePerformance" class="space-y-4">
+                    <!-- Template performance will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log Outreach Modal -->
+    <div id="logModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Log Outreach</h3>
+            <form id="logOutreachForm">
+                <input type="hidden" id="logContactId">
+                <select id="logTemplate" class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Select Template</option>
+                </select>
+                <select id="logChannel" class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="Email">Email</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="Twitter">Twitter DM</option>
+                </select>
+                <textarea id="logNotes" placeholder="Notes (optional)" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">Log Outreach</button>
+                    <button type="button" onclick="closeLogModal()" class="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-medium hover:bg-gray-300">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let contacts = JSON.parse(localStorage.getItem('contacts') || '[]');
+        let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+        let outreach = JSON.parse(localStorage.getItem('outreach') || '[]');
+
+        // Initialize with sample template if empty
+        if (templates.length === 0) {
+            templates = [
+                {
+                    id: Date.now(),
+                    name: 'Cold Intro - Problem/Solution',
+                    channel: 'Email',
+                    content: 'Hi {firstName},\n\nI noticed {company} is [specific observation]. Most [target audience] struggle with [pain point].\n\nI built [solution] that helps [specific benefit]. Would you be open to a quick 15-min call to see if it\'s a fit?\n\nBest,\n[Your Name]',
+                    sent: 0,
+                    responded: 0
+                }
+            ];
+            localStorage.setItem('templates', JSON.stringify(templates));
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'border-blue-600', 'text-blue-600'));
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.add('border-transparent', 'text-gray-600'));
+                btn.classList.add('active', 'border-blue-600', 'text-blue-600');
+                btn.classList.remove('border-transparent', 'text-gray-600');
+                
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+                document.getElementById(tab + 'Tab').classList.remove('hidden');
+
+                if (tab === 'analytics') renderAnalytics();
+            });
+        });
+
+        // Add contact
+        document.getElementById('addContactForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const contact = {
+                id: Date.now(),
+                name: document.getElementById('contactName').value,
+                email: document.getElementById('contactEmail').value,
+                company: document.getElementById('contactCompany').value,
+                source: document.getElementById('contactSource').value,
+                linkedin: document.getElementById('contactLinkedIn').value,
+                status: 'New',
+                addedDate: new Date().toISOString(),
+                lastContact: null
+            };
+            contacts.push(contact);
+            localStorage.setItem('contacts', JSON.stringify(contacts));
+            e.target.reset();
+            renderContacts();
+            updateStats();
+        });
+
+        // Add template
+        document.getElementById('addTemplateForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const template = {
+                id: Date.now(),
+                name: document.getElementById('templateName').value,
+                channel: document.getElementById('templateChannel').value,
+                content: document.getElementById('templateContent').value,
+                sent: 0,
+                responded: 0
+            };
+            templates.push(template);
+            localStorage.setItem('templates', JSON.stringify(templates));
+            e.target.reset();
+            renderTemplates();
+        });
+
+        // Log outreach
+        document.getElementById('logOutreachForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const contactId = parseInt(document.getElementById('logContactId').value);
+            const templateId = parseInt(document.getElementById('logTemplate').value);
+            
+            const log = {
+                id: Date.now(),
+                contactId,
+                templateId,
+                channel: document.getElementById('logChannel').value,
+                notes: document.getElementById('logNotes').value,
+                date: new Date().toISOString(),
+                status: 'Sent'
+            };
+            
+            outreach.push(log);
+            
+            // Update contact status
+            const contact = contacts.find(c => c.id === contactId);
+            if (contact) {
+                contact.status = 'Contacted';
+                contact.lastContact = new Date().toISOString();
+            }
+            
+            // Update template stats
+            if (templateId) {
+                const template = templates.find(t => t.id === templateId);
+                if (template) template.sent++;
+            }
+            
+            localStorage.setItem('outreach', JSON.stringify(outreach));
+            localStorage.setItem('contacts', JSON.stringify(contacts));
+            localStorage.setItem('templates', JSON.stringify(templates));
+            
+            closeLogModal();
+            renderContacts();
+            updateStats();
+        });
+
+        // Render contacts
+        function renderContacts() {
+            const tbody = document.getElementById('contactsTable');
+            tbody.innerHTML = contacts.map(c => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm font-medium text-gray-900">${c.name}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${c.email || '-'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${c.company || '-'}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(c.status)}">${c.status}</span></td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${c.lastContact ? new Date(c.lastContact).toLocaleDateString() : '-'}</td>
+                    <td class="px-6 py-4">
+                        <button onclick="openLogModal(${c.id})" class="text-blue-600 hover:text-blue-800 text-sm font-medium mr-3">Log Outreach</button>
+                        <button onclick="updateStatus(${c.id})" class="text-green-600 hover:text-green-800 text-sm font-medium mr-3">Mark Responded</button>
+                        <button onclick="deleteContact(${c.id})" class="text-red-600 hover:text-red-800 text-sm font-medium">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Render templates
+        function renderTemplates() {
+            const grid = document.getElementById('templatesGrid');
+            grid.innerHTML = templates.map(t => {
+                const responseRate = t.sent > 0 ? Math.round((t.responded / t.sent) * 100) : 0;
+                return `
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-semibold text-gray-900">${t.name}</h3>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">${t.channel}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-4 line-clamp-3">${t.content}</p>
+                        <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                            <div>
+                                <div class="text-gray-600">Sent</div>
+                                <div class="font-semibold text-gray-900">${t.sent}</div>
+                            </div>
+                            <div>
+                                <div class="text-gray-600">Response Rate</div>
+                                <div class="font-semibold ${responseRate >= 10 ? 'text-green-600' : 'text-gray-900'}">${responseRate}%</div>
+                            </div>
+                        </div>
+                        <button onclick="deleteTemplate(${t.id})" class="w-full text-sm text-red-600 hover:text-red-800 font-medium">Delete Template</button>
+                    </div>
+                `;
+            }).join('');
+            
+            // Update log modal template dropdown
+            const select = document.getElementById('logTemplate');
+            select.innerHTML = '<option value="">Select Template</option>' + 
+                templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+        }
+
+        // Render analytics
+        function renderAnalytics() {
+            // Response rate chart (placeholder - would need more data)
+            const ctx1 = document.getElementById('responseChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'Response Rate %',
+                        data: [0, 0, 0, 0],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+
+            // Channel distribution
+            const channelCounts = outreach.reduce((acc, o) => {
+                acc[o.channel] = (acc[o.channel] || 0) + 1;
+                return acc;
+            }, {});
+
+            const ctx2 = document.getElementById('channelChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(channelCounts),
+                    datasets: [{
+                        data: Object.values(channelCounts),
+                        backgroundColor: ['rgb(59, 130, 246)', 'rgb(16, 185, 129)', 'rgb(249, 115, 22)']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+
+            // Template performance
+            const performanceDiv = document.getElementById('templatePerformance');
+            performanceDiv.innerHTML = templates.map(t => {
+                const responseRate = t.sent > 0 ? Math.round((t.responded / t.sent) * 100) : 0;
+                return `
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div>
+                            <div class="font-medium text-gray-900">${t.name}</div>
+                            <div class="text-sm text-gray-600">${t.channel}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-semibold ${responseRate >= 10 ? 'text-green-600' : 'text-gray-900'}">${responseRate}%</div>
+                            <div class="text-sm text-gray-600">${t.sent} sent, ${t.responded} responded</div>
+                        </div>
+                    </div>
+                `;
+            }).join('') || '<p class="text-gray-600">No data yet. Start logging outreach!</p>';
+        }
+
+        // Update stats
+        function updateStats() {
+            document.getElementById('totalContacts').textContent = contacts.length;
+            document.getElementById('totalSent').textContent = outreach.length;
+            
+            const responses = outreach.filter(o => o.status === 'Responded').length;
+            const responseRate = outreach.length > 0 ? Math.round((responses / outreach.length) * 100) : 0;
+            document.getElementById('responseRate').textContent = responseRate + '%';
+            
+            const conversions = contacts.filter(c => c.status === 'Converted').length;
+            document.getElementById('conversions').textContent = conversions;
+        }
+
+        // Helper functions
+        function getStatusColor(status) {
+            const colors = {
+                'New': 'bg-gray-100 text-gray-800',
+                'Contacted': 'bg-blue-100 text-blue-800',
+                'Responded': 'bg-green-100 text-green-800',
+                'Meeting': 'bg-purple-100 text-purple-800',
+                'Converted': 'bg-green-100 text-green-800',
+                'Lost': 'bg-red-100 text-red-800'
+            };
+            return colors[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        function openLogModal(contactId) {
+            document.getElementById('logContactId').value = contactId;
+            document.getElementById('logModal').classList.remove('hidden');
+            document.getElementById('logModal').classList.add('flex');
+        }
+
+        function closeLogModal() {
+            document.getElementById('logModal').classList.add('hidden');
+            document.getElementById('logModal').classList.remove('flex');
+            document.getElementById('logOutreachForm').reset();
+        }
+
+        function updateStatus(contactId) {
+            const contact = contacts.find(c => c.id === contactId);
+            if (!contact) return;
+            
+            const statuses = ['New', 'Contacted', 'Responded', 'Meeting', 'Converted', 'Lost'];
+            const currentIndex = statuses.indexOf(contact.status);
+            contact.status = statuses[Math.min(currentIndex + 1, statuses.length - 1)];
+            
+            // Update template response count if applicable
+            const lastOutreach = outreach.filter(o => o.contactId === contactId).sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+            if (lastOutreach && lastOutreach.templateId && contact.status === 'Responded') {
+                const template = templates.find(t => t.id === lastOutreach.templateId);
+                if (template && lastOutreach.status !== 'Responded') {
+                    template.responded++;
+                    lastOutreach.status = 'Responded';
+                    localStorage.setItem('templates', JSON.stringify(templates));
+                    localStorage.setItem('outreach', JSON.stringify(outreach));
+                }
+            }
+            
+            localStorage.setItem('contacts', JSON.stringify(contacts));
+            renderContacts();
+            updateStats();
+        }
+
+        function deleteContact(contactId) {
+            if (!confirm('Delete this contact?')) return;
+            contacts = contacts.filter(c => c.id !== contactId);
+            outreach = outreach.filter(o => o.contactId !== contactId);
+            localStorage.setItem('contacts', JSON.stringify(contacts));
+            localStorage.setItem('outreach', JSON.stringify(outreach));
+            renderContacts();
+            updateStats();
+        }
+
+        function deleteTemplate(templateId) {
+            if (!confirm('Delete this template?')) return;
+            templates = templates.filter(t => t.id !== templateId);
+            localStorage.setItem('templates', JSON.stringify(templates));
+            renderTemplates();
+        }
+
+        // Export CSV
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            const csv = [
+                ['Name', 'Email', 'Company', 'Status', 'Last Contact', 'Source'],
+                ...contacts.map(c => [c.name, c.email, c.company, c.status, c.lastContact || '', c.source || ''])
+            ].map(row => row.join(',')).join('\n');
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'outreach-contacts.csv';
+            a.click();
+        });
+
+        // Initialize
+        renderContacts();
+        renderTemplates();
+        updateStats();
+    </script>
+</body>
+</html>
