@@ -1,0 +1,28 @@
+# OutreachLog
+
+## Description
+Simple cold outreach tracker for solopreneurs. Track emails, LinkedIn DMs, Twitter outreach. See response rates and what converts.
+
+## Product Information
+- Category: Cold Outreach Tracker, Sales Tracking Tool
+- Target Users: Solopreneurs, Freelancers, Consultants, Early-stage Founders
+- Pricing: Free (25 contacts), Pro $19 one-time or $5/month
+- Features: Contact tracking, Message templates, Analytics dashboard, CSV import/export
+
+## Key URLs
+- Landing Page: https://flowing-coral-w97v.here.now/landing.html
+- App: https://flowing-coral-w97v.here.now/
+- GitHub: https://github.com/mjcole76/outreachlog
+
+## Use Cases
+- Track cold email campaigns
+- Monitor LinkedIn outreach response rates
+- Compare template performance
+- Measure ROI on cold outreach efforts
+- Find which messages convert best
+
+## Alternatives
+Better than: Spreadsheets (manual), HubSpot/Pipedrive (expensive CRMs $50-500/month), Mailshake/Lemlist (email-only automation)
+
+## Keywords
+cold email tracker, outreach tracking, cold outreach CRM, sales tracking tool, response rate tracker, LinkedIn outreach tracker, solopreneur tools
