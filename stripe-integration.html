@@ -1,0 +1,184 @@
+<!-- Stripe Payment Integration for OutreachLog -->
+<!-- Add this to landing.html and index.html -->
+
+<!-- Phase 3: Stripe Integration -->
+
+<!-- Add to <head> section -->
+<script src="https://js.stripe.com/v3/"></script>
+
+<!-- Replace "Upgrade to Pro" buttons with this -->
+<button onclick="handleCheckout()" class="bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 shadow-lg">
+    Buy Pro - $19 One-Time
+</button>
+
+<button onclick="handleSubscription()" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700">
+    Subscribe - $5/month
+</button>
+
+<!-- Add before </body> -->
+<script>
+// Initialize Stripe (replace with your publishable key)
+const stripe = Stripe('pk_test_YOUR_PUBLISHABLE_KEY_HERE');
+
+// One-time payment ($19)
+async function handleCheckout() {
+    try {
+        const response = await fetch('/create-checkout-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                priceId: 'price_ONE_TIME_19', // Create this in Stripe Dashboard
+                mode: 'payment'
+            })
+        });
+        
+        const session = await response.json();
+        
+        // Redirect to Stripe Checkout
+        const result = await stripe.redirectToCheckout({
+            sessionId: session.id
+        });
+        
+        if (result.error) {
+            alert(result.error.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Payment failed. Please try again.');
+    }
+}
+
+// Subscription ($5/month)
+async function handleSubscription() {
+    try {
+        const response = await fetch('/create-checkout-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                priceId: 'price_SUBSCRIPTION_5', // Create this in Stripe Dashboard
+                mode: 'subscription'
+            })
+        });
+        
+        const session = await response.json();
+        
+        // Redirect to Stripe Checkout
+        const result = await stripe.redirectToCheckout({
+            sessionId: session.id
+        });
+        
+        if (result.error) {
+            alert(result.error.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Payment failed. Please try again.');
+    }
+}
+</script>
+
+<!-- Success Page (success.html) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - OutreachLog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex items-center justify-center px-4">
+        <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+            <div class="text-6xl mb-4">✅</div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">Payment Successful!</h1>
+            <p class="text-lg text-gray-600 mb-6">
+                Welcome to OutreachLog Pro! Your account has been upgraded.
+            </p>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p class="text-sm text-blue-900 font-medium">What you get:</p>
+                <ul class="text-sm text-blue-800 mt-2 space-y-1">
+                    <li>✓ Unlimited contacts</li>
+                    <li>✓ Unlimited templates</li>
+                    <li>✓ Full analytics</li>
+                    <li>✓ Priority support</li>
+                </ul>
+            </div>
+            <a href="index.html" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700">
+                Go to Dashboard
+            </a>
+        </div>
+    </div>
+</body>
+</html>
+
+<!-- Webhook Handler (Supabase Edge Function or Netlify Function) -->
+<!-- File: /functions/stripe-webhook.js -->
+/*
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+exports.handler = async (event) => {
+    const sig = event.headers['stripe-signature'];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    
+    let stripeEvent;
+    
+    try {
+        stripeEvent = stripe.webhooks.constructEvent(event.body, sig, webhookSecret);
+    } catch (err) {
+        return {
+            statusCode: 400,
+            body: `Webhook Error: ${err.message}`
+        };
+    }
+    
+    // Handle the event
+    switch (stripeEvent.type) {
+        case 'checkout.session.completed':
+            const session = stripeEvent.data.object;
+            
+            // Update user to Pro in database
+            // For now, we'll use localStorage flag
+            console.log('Payment successful:', session.customer_email);
+            
+            // TODO: Send welcome email via AgentMail
+            // TODO: Update Supabase user record
+            
+            break;
+            
+        case 'customer.subscription.deleted':
+            // Handle subscription cancellation
+            console.log('Subscription cancelled');
+            break;
+            
+        default:
+            console.log(`Unhandled event type ${stripeEvent.type}`);
+    }
+    
+    return {
+        statusCode: 200,
+        body: JSON.stringify({ received: true })
+    };
+};
+*/
+
+<!-- Setup Instructions -->
+<!--
+1. Create Stripe Account: https://stripe.com
+2. Get API Keys: Dashboard → Developers → API keys
+3. Create Products:
+   - One-time: $19 "OutreachLog Pro (Lifetime)"
+   - Subscription: $5/month "OutreachLog Pro (Monthly)"
+4. Create Prices for each product
+5. Copy Price IDs into code above
+6. Set up webhook endpoint (use Supabase or Netlify Functions)
+7. Test with Stripe test mode first
+8. Switch to live keys when ready
+
+Cost: 2.9% + $0.30 per transaction
+- $19 one-time: You get $18.45
+- $5/month: You get $4.85/month
+-->
